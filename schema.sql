@@ -1,0 +1,81 @@
+-- Profiles
+create table profiles (
+  id uuid references auth.users(id) primary key,
+  display_name text,
+  created_at timestamptz default now()
+);
+
+create or replace function handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, display_name)
+  values (new.id, new.raw_user_meta_data->>'display_name');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure handle_new_user();
+
+-- Prompt logs
+create table prompt_logs (
+  id bigint generated always as identity primary key,
+  user_id uuid references auth.users(id) on delete cascade,
+  prompt_text text not null,
+  model_used text not null,
+  token_count integer not null,
+  energy_kwh numeric not null,
+  co2_grams numeric not null,
+  water_ml numeric not null,
+  task_type text check (task_type in ('simple_qa','coding','creative','reasoning','summarization','other')),
+  created_at timestamptz default now()
+);
+
+alter table prompt_logs enable row level security;
+create policy "Users can view own logs" on prompt_logs for select using (auth.uid() = user_id);
+create policy "Users can insert own logs" on prompt_logs for insert with check (auth.uid() = user_id);
+create policy "Users can delete own logs" on prompt_logs for delete using (auth.uid() = user_id);
+
+-- LLM Coefficients
+create table llm_coefficients (
+  id bigint generated always as identity primary key,
+  model text unique not null,
+  provider text not null,
+  energy_kwh numeric not null,
+  co2_grams numeric not null,
+  water_ml numeric not null
+);
+
+alter table llm_coefficients enable row level security;
+create policy "Public read" on llm_coefficients for select using (true);
+
+insert into llm_coefficients (model, provider, energy_kwh, co2_grams, water_ml) values
+  ('gpt-4o','OpenAI',0.0087,4.32,7.20),
+  ('gpt-4o-mini','OpenAI',0.0021,1.04,1.74),
+  ('gpt-4-turbo','OpenAI',0.0110,5.46,9.10),
+  ('gpt-4','OpenAI',0.0130,6.45,10.75),
+  ('gpt-3.5-turbo','OpenAI',0.0017,0.84,1.40),
+  ('o1','OpenAI',0.0310,15.38,25.60),
+  ('o1-mini','OpenAI',0.0089,4.41,7.35),
+  ('claude-3-opus','Anthropic',0.0075,3.70,6.20),
+  ('claude-3-5-sonnet','Anthropic',0.0042,2.08,3.47),
+  ('claude-3-sonnet','Anthropic',0.0038,1.90,3.15),
+  ('claude-3-haiku','Anthropic',0.0010,0.50,0.83),
+  ('claude-3-5-haiku','Anthropic',0.0013,0.64,1.07),
+  ('gemini-1.5-pro','Google',0.0065,3.22,5.38),
+  ('gemini-1.5-flash','Google',0.0018,0.89,1.49),
+  ('gemini-2.0-flash','Google',0.0015,0.74,1.24),
+  ('gemini-ultra','Google',0.0140,6.94,11.57),
+  ('llama-3-70b','Meta',0.0045,2.23,3.72),
+  ('llama-3-8b','Meta',0.0011,0.55,0.91),
+  ('llama-3.1-405b','Meta',0.0180,8.93,14.88),
+  ('mistral-large','Mistral',0.0040,1.98,3.30),
+  ('mistral-small','Mistral',0.0014,0.69,1.16),
+  ('mixtral-8x7b','Mistral',0.0029,1.44,2.40),
+  ('command-r-plus','Cohere',0.0055,2.73,4.55),
+  ('command-r','Cohere',0.0022,1.09,1.82),
+  ('dbrx','Databricks',0.0095,4.71,7.85),
+  ('grok-1','xAI',0.0078,3.87,6.45),
+  ('phi-3-medium','Microsoft',0.0019,0.94,1.57),
+  ('phi-3-mini','Microsoft',0.0007,0.35,0.58);
