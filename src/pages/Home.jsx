@@ -292,11 +292,29 @@ function ScrollArrow() {
 
 // ─── Main component ──────────────────────────────────────────────────
 export default function Home() {
+
+  // ✅ RIGHT PLACE — inside component, before return
   const { data: coefficients = [] } = useQuery({
     queryKey: ['llm-coefficients'],
-    queryFn: () => base44.entities.LlmCoefficient.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('llm_coefficients')
+        .select('*');
+
+      if (error) throw error;
+      return data || [];
+    },
   });
 
+  return (
+    <>
+      {/* your entire UI */}
+      {coefficients.length > 0 && (
+        <ModelShowcase coefficients={coefficients} />
+      )}
+    </>
+  );
+}
   return (
     <>
       <style>{`
