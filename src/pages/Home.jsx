@@ -1,6 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
+
+const { data: coefficients = [] } = useQuery({
+  queryKey: ['llm-coefficients'],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from('llm_coefficients')
+      .select('*');
+
+    if (error) throw error;
+    return data || [];
+  },
+});
 import { useQuery } from '@tanstack/react-query';
 
 // ─── Provider colours ───────────────────────────────────────────────
