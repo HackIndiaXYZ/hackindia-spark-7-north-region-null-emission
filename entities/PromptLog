@@ -1,0 +1,55 @@
+{
+  "name": "PromptLog",
+  "type": "object",
+  "properties": {
+    "prompt_text": {
+      "type": "string",
+      "description": "The LLM prompt text"
+    },
+    "model_used": {
+      "type": "string",
+      "description": "The LLM model used"
+    },
+    "token_count": {
+      "type": "number",
+      "description": "Estimated token count"
+    },
+    "energy_kwh": {
+      "type": "number",
+      "description": "Energy consumed in kWh"
+    },
+    "co2_grams": {
+      "type": "number",
+      "description": "CO2 emissions in grams"
+    },
+    "water_ml": {
+      "type": "number",
+      "description": "Water usage in milliliters"
+    },
+    "task_type": {
+      "type": "string",
+      "enum": [
+        "simple_qa",
+        "coding",
+        "creative",
+        "reasoning",
+        "summarization",
+        "other"
+      ],
+      "description": "Classified task type"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this log is publicly shareable"
+    }
+  },
+  "required": [
+    "prompt_text",
+    "model_used",
+    "token_count",
+    "energy_kwh",
+    "co2_grams",
+    "water_ml"
+  ]
+}

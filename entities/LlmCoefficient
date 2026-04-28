@@ -1,0 +1,33 @@
+{
+  "name": "LlmCoefficient",
+  "type": "object",
+  "properties": {
+    "model": {
+      "type": "string",
+      "description": "Model name"
+    },
+    "provider": {
+      "type": "string",
+      "description": "Model provider"
+    },
+    "energy_kwh": {
+      "type": "number",
+      "description": "Energy per 1000 tokens in kWh"
+    },
+    "co2_grams": {
+      "type": "number",
+      "description": "CO2 per 1000 tokens in grams"
+    },
+    "water_ml": {
+      "type": "number",
+      "description": "Water per 1000 tokens in ml"
+    }
+  },
+  "required": [
+    "model",
+    "provider",
+    "energy_kwh",
+    "co2_grams",
+    "water_ml"
+  ]
+}
